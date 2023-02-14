@@ -1,0 +1,42 @@
+desc:Barebones Compressor Stereo
+
+import ui-lib.jsfx-inc
+import cookdsp.jsfx-inc
+import Experimental Compressor
+
+slider1:0<-10,5>Cutoff Octave from central A
+slider2:0<-5,60>Detector Drive
+slider3:0<-10,10>Output Gain
+slider4:0<-10,10>Gain Actuation
+slider5:0<-10,10>Net Gain
+
+
+@init
+freemem = ui_setup(0);
+
+cuttof_freq = freqCalc(slider1);
+
+fac0.smoothedSetUp(cuttof_freq);
+fac1.smoothedSetUp(cuttof_freq);
+
+NetGainIntegrator.lop(0.1);
+
+ext_noinit = 0;
+
+
+@sample
+fac0.smoothedChParam(freqCalc(slider1));
+fac1.smoothedChParam(freqCalc(slider1));
+
+factor0 = fac1.smoothedDo(spl0);
+factor1 = fac1.smoothedDo(spl1);
+
+out_gain = dbtoa(slider3);
+
+spl0 = spl0 * factor0 * out_gain;
+spl1 = spl1 * factor1 * out_gain;
+
+mean_factor = (factor0 + factor1) / 2;
+
+slider4 = atodb(mean_factor);
+slider5 = atodb(NetGainIntegrator.lop_do(mean_factor) * out_gain);
